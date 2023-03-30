@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"irq.h": "c",
+			"adc.h": "c",
+			"functional": "c",
+			"pwm.h": "c"
+		}
+	}
+}
