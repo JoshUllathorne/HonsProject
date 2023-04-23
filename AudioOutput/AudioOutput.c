@@ -8,6 +8,7 @@
 #include <math.h>
 
 #define AUDIO_PIN 15
+#define BUTTON_PIN 28
 
 #define MAX_DUTY_CYCLE 54
 #define MIN_DUTY_CYCLE 0
@@ -42,6 +43,8 @@ void on_pwm_wrap()
     static int duty = 127;         // starting value for wave
     static bool increasing = true; // tracks if the current duty value should increase or decrease during this interrupt
     static int sinVal;             // stores the corresponding sine value for the current duty cycle
+    static bool released = true;
+    static int wave = 0;            //0 - sine wave     1 - triangle wave       2 - square
 
     // creates a triangle wave between 0 - maximum duty cycle
     if (increasing)
@@ -95,8 +98,44 @@ void on_pwm_wrap()
         // printf("%d: %d\n", duty, sinVal);
     }
 
-    pwm_set_gpio_level(AUDIO_PIN, sinVal); // outputs sin wave
-    // pwm_set_gpio_level(AUDIO_PIN, duty); // outputs triangle wave
+    gpio_init(BUTTON_PIN);
+    gpio_set_dir(BUTTON_PIN, GPIO_IN);
+    gpio_pull_down(BUTTON_PIN);
+
+    if(released)
+    {
+        if(gpio_get(BUTTON_PIN))
+        {
+            released = false;
+            if (wave == 2) {
+                wave = 0;
+            } else {
+                wave++;
+            }
+        }
+    }
+
+    if(!gpio_get(BUTTON_PIN))
+    {
+        released = true;
+    }
+
+    switch (wave)
+    {
+        case 0: 
+            pwm_set_gpio_level(AUDIO_PIN, sinVal); // outputs sin wave 
+            break;
+        case 1:
+            pwm_set_gpio_level(AUDIO_PIN, duty); // outputs triangle wave
+            break;
+        case 2:
+            if (duty > MAX_DUTY_CYCLE/2) {
+                pwm_set_gpio_level(AUDIO_PIN, MAX_DUTY_CYCLE * 0.25f);
+            } else {
+                pwm_set_gpio_level(AUDIO_PIN, 0);
+            }
+    }
+
 }
 #endif
 
